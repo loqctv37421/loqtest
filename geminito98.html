@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="zh-Hant" data-style="mono">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>東京 9 天 8 夜行程與記帳助手</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap">
+<style>
+:root{--bg:#ffffff;--card:#f5f5f6;--ink:#111;--mute:#6b6b70;--line:#e3e3e6;--acc:#111;--on:#fff;--warn:#d9822b;
+--ff:-apple-system,"Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif;--fm:"JetBrains Mono",monospace;--r:14px;color-scheme:light;box-sizing:border-box}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:15px/1.55 var(--ff);-webkit-text-size-adjust:100%}
+.wrap{max-width:640px;margin:0 auto}
+.hero{background:var(--bg);padding:18px 16px 6px}
+.hrow{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.t1{font-size:1.35em;font-weight:700;line-height:1.2}
+.t2{font:.78em var(--fm);opacity:.8;margin-top:4px}
+.t3{font-size:.82em;opacity:.9;margin-top:4px}
+.me{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:999px;padding:1px 10px;font:inherit;font-size:.95em;cursor:pointer}
+.seg{display:flex;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:4px;gap:2px}
+.seg button{border:0;background:none;color:var(--mute);width:38px;height:36px;border-radius:11px;font-size:1.05em;cursor:pointer;transition:all .2s}
+.seg button.on{background:#111;color:#fff}
+.chips{position:sticky;top:0;z-index:6;display:flex;gap:8px;overflow-x:auto;padding:10px 16px 12px;background:var(--bg);border-bottom:1px solid var(--line);scrollbar-width:none}
+.chips::-webkit-scrollbar{display:none}
+.dc{flex:0 0 58px;border:0;border-radius:14px;padding:8px 0;background:#f1f1f3;color:#8e8e93;text-align:center;cursor:pointer;line-height:1.25;transition:all .2s}
+.dc small{display:block;font:.72em var(--fm)}
+.dc b{font:700 1.15em var(--fm)}
+.dc.on{background:#111;color:#fff;box-shadow:0 0 0 2px #111,0 6px 16px rgba(0,0,0,.22);transform:translateY(-1px)}
+main{padding:6px 14px 70px}
+#view{transition:opacity .2s ease,transform .2s ease}
+#view.out{opacity:0;transform:translateY(8px)}
+.card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin:12px 0}
+.card h2{font-size:1.05em;margin:0 0 8px;display:flex;justify-content:space-between;align-items:center}
+.dh{margin:14px 0 4px;font-size:1.2em}
+.kpi{display:flex;gap:8px;margin-bottom:10px}
+.kpi div{flex:1;text-align:center;border:1px solid var(--line);border-radius:calc(var(--r)*.8);padding:6px 0;background:var(--bg)}
+.kpi b{display:block;font:700 1.35em var(--fm);color:var(--acc)}.kpi span{font-size:.75em;color:var(--mute)}
+.gm{display:block;width:100%;height:250px;border:0;border-radius:calc(var(--r)*.8);background:var(--bg)}
+.tl{position:relative;margin:10px 0 0 6px;padding-left:20px}
+.tl::before{content:"";position:absolute;left:3px;top:6px;bottom:6px;width:2px;background:var(--acc)}
+.ti{position:relative;margin-bottom:12px}
+.ti::before{content:"";position:absolute;left:-21px;top:26px;width:10px;height:10px;border-radius:50%;background:var(--acc);box-shadow:0 0 0 4px var(--bg)}
+.tc{display:flex;gap:12px;background:var(--card);border:1px solid var(--line);border-radius:var(--r);padding:12px}
+.tb{flex:0 0 78px;text-align:center}
+.tbox{position:relative;border:1px solid var(--line);border-radius:calc(var(--r)*.8);padding:6px 0;background:var(--bg)}
+.tbox small{display:block;color:var(--mute);font-size:.75em}
+.tbox b{font:700 1.3em var(--fm)}
+.cat{margin-top:6px;width:100%;font-size:.78em;padding:4px 0;border-radius:999px;text-align:center;color:var(--mute);background:var(--bg);border:1px solid var(--line)}
+.tx{flex:1;min-width:0;position:relative;padding-right:22px}
+.ttl{font-weight:700;font-size:1.05em;word-break:break-word}.ttl a{color:var(--ink);text-decoration:none}
+.pin{color:var(--mute);font-size:.88em;margin-top:2px}
+.nt{color:var(--warn);font-size:.88em;margin-top:2px}
+.x{position:absolute;right:-4px;top:-4px;border:0;background:none;color:var(--mute);cursor:pointer;font-size:20px;padding:4px 8px}
+.stop{display:flex;gap:10px;padding:8px 0;border-top:1px solid var(--line);position:relative;align-items:center}
+.stop:first-of-type{border-top:0}
+.grow{flex:1;min-width:0}.grow a{color:var(--ink)}
+.note{color:var(--mute);font-size:.88em}
+.tag{display:inline-block;font-size:.75em;border:1px solid var(--line);border-radius:6px;padding:0 6px;margin-left:6px;color:var(--mute)}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+input,select{font:inherit;font-size:15px;color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:calc(var(--r)*.6);padding:8px 10px;min-width:0}
+.row input,.row select{flex:1 1 90px}.row .w{flex:3 1 140px}
+button.b{font:inherit;border:0;background:var(--acc);color:var(--on);border-radius:calc(var(--r)*.6);padding:8px 16px;cursor:pointer;font-weight:600}
+a.b{display:inline-block;text-decoration:none;border:1px solid var(--acc);color:var(--acc);border-radius:calc(var(--r)*.6);padding:8px 14px;margin:10px 8px 0 0;font-size:.93em}
+.tot{display:flex;justify-content:space-between;font-weight:600;border-top:1px solid var(--line);margin-top:8px;padding-top:8px}
+.fm,.tot span:last-child,.ov span:nth-child(even){font-family:var(--fm)}
+.empty{color:var(--mute);font-size:.88em;padding:4px 0}
+.ov{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:.93em}
+.ov span:nth-child(even){text-align:right;color:var(--mute)}
+.bar{height:8px;border-radius:4px;background:var(--line);overflow:hidden;margin:4px 0 8px}
+.bar i{display:block;height:100%;background:var(--acc);transition:width .3s ease}
+.over{color:#ff5a6e}
+.lb{display:flex;gap:8px;align-items:center}.lb>.rk{width:24px;text-align:center}
+.champ{background:color-mix(in srgb,#ffd43b 20%,var(--card));border:1px solid #ffd43b;border-radius:calc(var(--r)*.7);padding:10px;margin:4px 0 10px;text-align:center}
+.chip{font:inherit;font-size:.9em;border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:5px 12px;cursor:pointer}
+#toast{position:fixed;left:12px;right:12px;top:12px;z-index:60;background:#ffd43b;color:#111;border-radius:12px;padding:12px 14px;font-weight:700;text-align:center;display:none}
+#login{position:fixed;inset:0;z-index:50;display:flex;align-items:center;justify-content:center;background:#fff;color:#111}
+#login.gone{display:none}
+.lg{width:100%;max-width:320px;text-align:center}
+.lg input{width:100%;text-align:center;padding:12px;border-radius:14px;border:1px solid var(--line)}
+.lg button{width:100%;margin-top:12px;padding:12px;border:0;border-radius:14px;background:#111;color:#fff;font-weight:700;cursor:pointer}
+.weather-box{display:flex;align-items:center;justify-content:space-between;background:var(--bg);padding:10px 14px;border-radius:calc(var(--r)*.8);border:1px solid var(--line)}
+.weather-box .left{display:flex;align-items:center;gap:12px}
+.weather-box .icon{font-size:2em}
+.weather-box .temp{font-family:var(--fm);font-weight:700;font-size:1.1em}
+@media print{.chips,.seg,button,.row,a.b{display:none!important}}
+</style>
+</head>
+<body>
+
+<div id="login"><div class="lg"><h1>✈ 東京之旅</h1><p class="note">2026 NOV 11 – NOV 19</p><input id="gn" maxlength="12" placeholder="輸入暱稱或姓名"><button id="gok" onclick="saveName()">進入系統</button></div></div>
+
+<div class="wrap" id="app">
+<header class="hero">
+  <div class="hrow">
+    <div><div class="t1">✈ 東京之旅 Tokyo</div><div class="t2">NOV 11 – NOV 19, 2026</div></div>
+    <div class="seg" id="seg"></div>
+  </div>
+  <div class="t3"><span id="cd"></span> <button class="me" id="me" onclick="showLogin()"></button></div>
+</header>
+<nav class="chips" id="chips"></nav>
+<main id="view"></main>
+</div>
+<div id="toast"></div>
+<datalist id="spots"></datalist>
+
+<script>
+const START=new Date(2026,10,11), WD=["日","一","二","三","四","五","六"];
+const CATS=["餐飲","交通","購物","娛樂","其他"];
+const SC=["景點","交通","餐飲","購物","住宿","其他"], EMO={景點:"⛩",交通:"🚆",餐飲:"🍜",購物:"🛍",住宿:"🏨",其他:"✨"};
+
+const SPOTS_RAW=`成田機場|千葉縣成田市|35.7720|140.3929|交通
+羽田機場|大田區|35.5494|139.7798|交通
+東京車站|千代田區|35.6812|139.7671|交通
+淺草寺|台東區|35.7148|139.7967|景點
+晴空塔|墨田區|35.7101|139.8107|景點
+上野公園|台東區|35.7156|139.7745|景點
+阿美橫丁|台東區|35.7106|139.7747|購物
+秋葉原|千代田區|35.6984|139.7731|購物
+東京鐵塔|港區|35.6586|139.7454|景點
+澀谷 SKY|澀谷區|35.6585|139.7022|景點
+新宿御苑|新宿區|35.6852|139.7100|景點
+東京迪士尼樂園|千葉縣浦安市|35.6329|139.8804|景點`;
+
+const SP=SPOTS_RAW.split("\n").map(l=>{const a=l.split("|");return{name:a[0],area:a[1],lat:+a[2],lng:+a[3],cat:a[4]}});
+const NRT={lat:35.7720,lng:140.3929};
+
+let S={rate:0.21,hotels:[],bud:{},stops:[],exp:[],closed:{},tb:0}, cur=0, last=0, addOpen=0, CONF=-1, cf=0;
+let ME="local", MEM={local:{name:"我"}}, weatherCache={};
+
+const esc=s=>String(s).replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const uid=()=>Math.random().toString(36).slice(2,10);
+const D=i=>{const d=new Date(START);d.setDate(d.getDate()+i);return d};
+const ymd=d=>d.getFullYear()+"-"+String(d.getMonth()+1).padStart(2,"0")+"-"+String(d.getDate()).padStart(2,"0");
+const yen=n=>"¥"+Math.round(n).toLocaleString();
+const twd=n=>"NT$"+Math.round(n*S.rate).toLocaleString();
+
+const dayExp=i=>S.exp.filter(e=>e.day==i);
+const dayTot=i=>dayExp(i).reduce((a,e)=>a+e.amt,0);
+const allTot=()=>S.exp.reduce((a,e)=>a+e.amt,0);
+const nm=id=>(MEM[id]&&MEM[id].name)||"旅伴";
+const mapQ=q=>"https://www.google.com/maps/search/?api=1&query="+encodeURIComponent(q);
+
+function save(){try{localStorage.setItem("tokyo_v3",JSON.stringify(S))}catch(e){}}
+function load(){
+  try{
+    const d=JSON.parse(localStorage.getItem("tokyo_v3"));
+    if(d) S=Object.assign(S,d);
+    const savedName=localStorage.getItem("tokyoName");
+    if(savedName){ MEM.local.name=savedName; document.getElementById("login").classList.add("gone"); }
+  }catch(e){}
+}
+
+function hv(a,b){
+  const r=Math.PI/180, dl=(b.lat-a.lat)*r, dn=(b.lng-a.lng)*r;
+  const x=Math.sin(dl/2)**2+Math.cos(a.lat*r)*Math.cos(b.lat*r)*Math.sin(dn/2)**2;
+  return 12742*Math.asin(Math.sqrt(x));
+}
+
+function dayItems(i){
+  const f=[];
+  if(i==0){f.push({t:"15:00",name:"桃園機場起飛",area:"台北 → 成田",cat:"交通",fixed:1},{t:"19:00",name:"抵達成田機場",area:"成田機場",cat:"交通",lat:NRT.lat,lng:NRT.lng,fixed:1})}
+  if(i==8){f.push({t:"20:10",name:"成田機場起飛",area:"成田機場",cat:"交通",lat:NRT.lat,lng:NRT.lng,fixed:1})}
+  const u=S.stops.filter(s=>s.day==i);
+  return [...f,...u].sort((a,b)=>(a.t||"99").localeCompare(b.t||"99"));
+}
+
+function stats(items){
+  const p=items.filter(x=>x.lat!=null);
+  let km=0; for(let k=1;k<p.length;k++) km+=hv(p[k-1],p[k]);
+  return{n:items.length,m:p.length,km};
+}
+
+function gmapSrc(items){
+  const q=items.filter(x=>x.lat!=null||!x.fixed).map(x=>x.lat!=null?x.lat+","+x.lng:x.name+" 東京");
+  if(q.length>=2) return "https://maps.google.com/maps?output=embed&saddr="+encodeURIComponent(q[0])+"&daddr="+q.slice(1).map(encodeURIComponent).join("+to:");
+  return "https://maps.google.com/maps?output=embed&z=13&q="+encodeURIComponent(q[0]||"東京車站");
+}
+
+function topSpender(i){
+  const o={}; dayExp(i).forEach(e=>o[e.for||e.by]=(o[e.for||e.by]||0)+e.amt);
+  return Object.entries(o).sort((a,b)=>b[1]-a[1]);
+}
+
+function is2330(i){
+  const target=new Date(2026,10,11+i,23,30);
+  return new Date()>=target;
+}
+
+function board(i){
+  const cl=S.closed[i], done=!!cl||is2330(i), r=cl?cl.rank:topSpender(i), top=r[0]?r[0][1]:1;
+  let h=`<div class="card"><h2>🏆 今日消費排行<span class="tag">${cl?"已提前結算":done?"已結算":"23:30 結算"}</span></h2>`;
+  if(!r.length) h+=`<div class="empty">今天尚無記帳紀錄。</div>`;
+  else{
+    if(done) h+=`<div class="champ">🏆 今日冠軍 <b>${esc(nm(r[0][0]))}</b> <span class="fm">${yen(r[0][1])}</span></div>`;
+    h+=r.map(([id,v],k)=>`<div class="lb"><span class="rk">${["🥇","🥈","🥉"][k]||k+1}</span><span class="grow">${esc(nm(id))}</span><span class="fm">${yen(v)}</span></div><div class="bar"><i style="width:${v/top*100}%;"></i></div>`).join("");
+  }
+  if(!done&&r.length) h+=`<button class="chip" style="margin-top:8px" onclick="toggleSettle(${i})">${CONF==i?"再按一次確認提前結算":"提前結算今日"}</button>`;
+  return h+`</div>`;
+}
+
+function toggleSettle(i){
+  if(CONF==i){ S.closed[i]={by:ME,rank:topSpender(i),tot:dayTot(i)}; CONF=-1; save(); }
+  else { CONF=i; clearTimeout(cf); cf=setTimeout(()=>{CONF=-1; render()},4000); }
+  render();
+}
+
+async function fetchWeather(dayIndex){
+  const dateStr=ymd(D(dayIndex));
+  if(weatherCache[dateStr]) return weatherCache[dateStr];
+  try{
+    const res=await fetch(`https://api.open-meteo.com/v1/forecast?latitude=35.6895&longitude=139.6917&daily=weathercode,temperature_2m_max,temperature_2m_min,precipitation_probability_max&timezone=Asia%2FTokyo&start_date=${dateStr}&end_date=${dateStr}`);
+    const data=await res.json();
+    if(data.daily){
+      const code=data.daily.weathercode[0];
+      let icon="☀️", text="晴朗";
+      if(code>=1&&code<=3){icon="⛅";text="多雲";}
+      else if(code>=45&&code<=48){icon="🌫️";text="有霧";}
+      else if(code>=51&&code<=67){icon="🌧️";text="降雨";}
+      else if(code>=71){icon="❄️";text="降雪";}
+      weatherCache[dateStr]={icon,text,max:Math.round(data.daily.temperature_2m_max[0]),min:Math.round(data.daily.temperature_2m_min[0]),pop:data.daily.precipitation_probability_max[0]||0};
+      return weatherCache[dateStr];
+    }
+  }catch(e){}
+  return {icon:"🍂",text:"秋季氣候",max:16,min:9,pop:20};
+}
+
+function overview(){
+  const dt=allTot(), tb=S.tb||0, leftTotal=tb-dt;
+  let h=`<div class="card"><h2>💰 費用與預算總覽</h2>
+  <div class="ov"><span>累積每日總花費</span><span>${yen(dt)} ≈ ${twd(dt)}</span></div>
+  <div class="row" style="margin-top:12px"><span class="note" style="align-self:center">總預算設定</span><input id="tb" type="number" placeholder="日圓 JPY" value="${tb||""}" onchange="S.tb=parseFloat(this.value)||0;save();render()"></div>`;
+  
+  if(tb>0){
+    h+=`<div class="tot" style="border:0;margin:8px 0 0"><span>預算扣除後剩餘</span><span class="${leftTotal<0?"over":""}">${leftTotal<0?"超支 "+yen(-leftTotal):yen(leftTotal)}</span></div>
+    <div class="bar"><i style="width:${Math.min(100,dt/tb*100)}%;${leftTotal<0?"background:#ff5a6e":""}"></i></div>`;
+  }
+  h+=`</div><div class="card"><h2>📅 每日預算設定</h2>`;
+  for(let i=0;i<9;i++){
+    const dbud=S.bud[i]||0, dcost=dayTot(i), dleft=dbud-dcost;
+    h+=`<div class="stop"><div class="grow"><b>Day ${i+1} (${D(i).getMonth()+1}/${D(i).getDate()})</b><div class="note">已花費：${yen(dcost)}</div></div>
+    <div style="text-align:right"><input type="number" placeholder="日預算" value="${dbud||""}" style="width:100px" onchange="S.bud[${i}]=parseFloat(this.value)||0;save();render()">
+    ${dbud>0?`<div class="note ${dleft<0?"over":""}">${dleft<0?"超 "+yen(-dleft):"剩 "+yen(dleft)}</div>`:""}</div></div>`;
+  }
+  return h+`</div>`;
+}
+
+async function render(){
+  document.getElementById("seg").innerHTML=`<button class="${cur>=0?"on":""}" onclick="go(${last})">📅</button><button class="${cur<0?"on":""}" onclick="go(-1)">＄</button><button class="${addOpen&&cur>=0?"on":""}" onclick="addOpen=!addOpen;render()">＋</button>`;
+  document.getElementById("me").textContent="👤 "+nm(ME);
+  
+  const cb=document.getElementById("chips");
+  cb.innerHTML=[...Array(9).keys()].map(i=>`<button class="dc ${i==cur?"on":""}" onclick="go(${i})"><small>${D(i).getMonth()+1}/${D(i).getDate()}</small><b>D${i+1}</b></button>`).join("");
+
+  const v=document.getElementById("view");
+  if(cur<0){ v.innerHTML=overview(); return; }
+
+  const items=dayItems(cur), s=stats(items), d=D(cur), w=await fetchWeather(cur);
+  let h=`<h2 class="dh">Day ${cur+1} ${d.getMonth()+1}/${d.getDate()}（${WD[d.getDay()]}）</h2>`;
+  
+  h+=`<div class="card"><div class="weather-box"><div class="left"><span class="icon">${w.icon}</span><div><b>東京天氣：${w.text}</b><div class="note">降雨機率 ${w.pop}%</div></div></div><div class="temp">${w.min}°C - ${w.max}°C</div></div></div>`;
+
+  h+=`<div class="card"><div class="kpi"><div><b>${s.n}</b><span>行程</span></div><div><b>${s.m}</b><span>已定位</span></div><div><b>${s.km.toFixed(1)}</b><span>km</span></div></div>
+  <iframe class="gm" src="${gmapSrc(items)}" title="Google地圖" loading="lazy"></iframe></div>`;
+
+  if(addOpen){
+    h+=`<div class="card"><h2>＋ 新增今日行程</h2>
+    <div class="row"><input id="st_n" class="w" list="spots" placeholder="地點名稱"></div>
+    <div class="row"><input id="st_t" type="time"><select id="st_c">${SC.map(c=>`<option value="${c}">${EMO[c]} ${c}</option>`).join("")}</select></div>
+    <div class="row"><input id="st_o" class="w" placeholder="備註"><button class="b" onclick="addStop()">新增</button></div></div>`;
+  }
+
+  h+=`<div class="tl">`+items.map(x=>`
+    <div class="ti"><div class="tc"><div class="tb"><div class="tbox"><small>時間</small><b>${x.t||"--:--"}</b></div><div class="cat">${EMO[x.cat]||"✨"} ${x.cat}</div></div>
+    <div class="tx"><div class="ttl"><a href="${mapQ(x.lat?x.lat+","+x.lng:x.name)}" target="_blank">${esc(x.name)}</a></div>
+    <div class="pin">📍 ${esc(x.area||"未定位")}</div>${x.note?`<div class="nt">ⓘ ${esc(x.note)}</div>`:""}
+    ${!x.fixed?`<button class="x" onclick="delStop('${x.id}')">×</button>`:""}</div></div></div>
+  `).join("")+`</div>`;
+
+  h+=board(cur);
+
+  const tot=dayTot(cur), ex=dayExp(cur), dbud=S.bud[cur]||0, dleft=dbud-tot;
+  h+=`<div class="card"><h2>💴 今日花費與預算</h2>`;
+  if(dbud>0){
+    h+=`<div class="tot" style="border:0;margin:0 0 6px"><span>本日預算 ${yen(dbud)}</span><span class="${dleft<0?"over":""}">${dleft<0?"超支 "+yen(-dleft):"剩餘 "+yen(dleft)}</span></div>
+    <div class="bar"><i style="width:${Math.min(100,tot/dbud*100)}%;${dleft<0?"background:#ff5a6e":""}"></i></div>`;
+  }
+  h+=(ex.length?ex.map(e=>`<div class="stop"><div class="grow">${esc(e.label)}<span class="tag">${e.cat}</span></div><div class="fm">${yen(e.amt)} <small class="note">(≈${twd(e.amt)})</small></div><button class="x" style="position:static" onclick="delExp('${e.id}')">×</button></div>`).join(""):`<div class="empty">尚無花費紀錄</div>`)+
+  `<div class="row"><select id="ex_c">${CATS.map(c=>`<option>${c}</option>`).join("")}</select><input id="ex_l" class="w" placeholder="項目 (例: 拉麵)"></div>
+  <div class="row"><input id="ex_a" type="number" placeholder="金額 (日幣 JPY)" oninput="updateConvertedText(this.value)"><button class="b" onclick="addExp()">記帳</button></div>
+  <div id="ex_conv" class="note" style="margin-top:4px"></div>
+  <div class="tot"><span>今日小計</span><span>${yen(tot)} ≈ ${twd(tot)}</span></div></div>`;
+
+  v.innerHTML=h;
+}
+
+function updateConvertedText(val){
+  const num=parseFloat(val);
+  document.getElementById("ex_conv").textContent=(num>0)?`折合台幣大約：${twd(num)}`:"";
+}
+
+function go(i){
+  const v=document.getElementById("view");
+  v.classList.add("out");
+  setTimeout(()=>{ cur=i; if(i>=0) last=i; render(); v.classList.remove("out"); },150);
+}
+
+function addStop(){
+  const n=document.getElementById("st_n").value.trim(); if(!n)return;
+  const sp=SP.find(x=>x.name.toLowerCase()==n.toLowerCase());
+  const o={id:uid(), day:cur, t:document.getElementById("st_t").value, name:n, note:document.getElementById("st_o").value.trim(), cat:document.getElementById("st_c").value};
+  if(sp){ o.lat=sp.lat; o.lng=sp.lng; o.area=sp.area; }
+  S.stops.push(o); save(); addOpen=0; render();
+}
+
+function delStop(id){ S.stops=S.stops.filter(x=>x.id!=id); save(); render(); }
+function addExp(){
+  const a=parseFloat(document.getElementById("ex_a").value); if(!a)return;
+  S.exp.push({id:uid(), day:cur, cat:document.getElementById("ex_c").value, label:document.getElementById("ex_l").value.trim()||"消費", amt:a, by:ME});
+  save(); render();
+}
+function delExp(id){ S.exp=S.exp.filter(x=>x.id!=id); save(); render(); }
+
+function saveName(){
+  const n=document.getElementById("gn").value.trim(); if(!n)return;
+  MEM.local.name=n; localStorage.setItem("tokyoName",n);
+  document.getElementById("login").classList.add("gone"); render();
+}
+function showLogin(){ document.getElementById("login").classList.remove("gone"); }
+
+document.getElementById("spots").innerHTML=SP.map(x=>`<option value="${esc(x.name)}">${esc(x.area)}</option>`).join("");
+load(); render();
+</script>
+</body>
+</html>
