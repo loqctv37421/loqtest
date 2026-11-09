@@ -166,6 +166,12 @@ const fmt=(a,c)=>c=="TWD"?"NT$"+Math.round(a).toLocaleString():yen(a);
 const toJPY=(a,c)=>c=="TWD"?a/S.rate:a;
 const dayExp=i=>S.exp.filter(e=>e.day==i);
 const dayTot=i=>dayExp(i).reduce((a,e)=>a+e.amt,0);
+const mine=e=>(e.for||e.by)==ME;
+const mySpend=i=>S.exp.filter(e=>e.day==i&&mine(e)).reduce((a,e)=>a+e.amt,0);
+const myAllSpend=()=>S.exp.filter(mine).reduce((a,e)=>a+e.amt,0);
+const myTb=()=>(MEM[ME]&&MEM[ME].tb)||0;
+const myBud=i=>(MEM[ME]&&MEM[ME].bud&&MEM[ME].bud[i])||0;
+function setMy(p){MEM[ME]=Object.assign({},MEM[ME],p);updateDoc(doc(fs,"members",ME),clean(p)).catch(wfail)}
 const allTot=()=>S.exp.reduce((a,e)=>a+e.amt,0);
 const hotelTot=()=>S.hotels.reduce((a,h)=>a+toJPY(h.cost||0,h.cur),0);
 const flightTot=()=>S.flight?toJPY(S.flight.amt||0,S.flight.cur):0;
@@ -182,7 +188,7 @@ const topSpender=i=>{const o={};dayExp(i).forEach(e=>o[e.for||e.by]=(o[e.for||e.
 // ---- data layer ----
 const clean=o=>JSON.parse(JSON.stringify(o));
 const wfail=()=>toast("寫入失敗：可能沒有權限（帳號不在名單內）或網路中斷，請稍後再試。");
-function cfgOf(){return{rate:S.rate,tb:S.tb,flight:S.flight,hotels:S.hotels,bud:S.bud,closed:S.closed}}
+function cfgOf(){return{rate:S.rate,flight:S.flight,hotels:S.hotels,closed:S.closed}}
 function save(){if(!LIVE)return;setDoc(doc(fs,"trip","cfg"),{json:JSON.stringify(clean(cfgOf()))}).catch(wfail)}
 function addDoc(col,o){o.id=uid();o.by=ME;S[col].push(o);setDoc(doc(fs,col,o.id),clean(Object.assign({},o,{id:undefined}))).catch(wfail)}
 function updDoc(col,id,p){const o=S[col].find(x=>x.id==id);if(!o)return;Object.assign(o,p);updateDoc(doc(fs,col,id),clean(p)).catch(wfail)}
@@ -267,12 +273,12 @@ function board(i){
   return h+`</div>`;
 }
 function overview(){
-  const dt=allTot(),ht=hotelTot(),ft=flightTot(),g=dt+ht+ft,tb=S.tb||0;
-  let h=`<div class="card"><h2>💰 費用總覽</h2><div class="ov"><span>每日花費</span><span>${yen(dt)}</span><span>住宿</span><span>${yen(ht)}</span><span>機票</span><span>${yen(ft)}</span></div>
+  const dt=allTot(),ht=hotelTot(),ft=flightTot(),g=dt+ht+ft,tb=myTb(),ms=myAllSpend();
+  let h=`<div class="card"><h2>💰 費用總覽</h2><div class="ov"><span>每日花費（全員）</span><span>${yen(dt)}</span><span>住宿</span><span>${yen(ht)}</span><span>機票</span><span>${yen(ft)}</span></div>
   <div class="tot"><span>全程總花費</span><span>${yen(g)}　≈ ${twd(g)}</span></div>
   <div class="row"><span class="note" style="align-self:center;min-width:64px">機票費用</span><input id="f_a" type="number" inputmode="decimal" placeholder="金額" value="${S.flight&&S.flight.amt?S.flight.amt:""}">${curSel("f_c",S.flight&&S.flight.cur)}</div>
-  <div class="row"><span class="note" style="align-self:center;min-width:64px">總預算</span><input id="tb" type="number" inputmode="decimal" placeholder="日圓（選填）" value="${tb||""}"></div>`;
-  if(tb>0){const left=tb-dt;h+=`<div class="tot" style="border:0;margin:6px 0 0"><span>總預算 ${yen(tb)}</span><span class="${left<0?"over":""}">${left<0?"超支 "+yen(-left):"剩餘 "+yen(left)}</span></div><div class="bar"><i style="width:${Math.min(100,dt/tb*100)}%;${left<0?"background:#ff5a6e":""}"></i></div><div class="note">只計每日花費，不含住宿與機票。</div>`}
+  <div class="row"><span class="note" style="align-self:center;min-width:64px">我的總預算</span><input id="tb" type="number" inputmode="decimal" placeholder="日圓（選填）" value="${tb||""}"></div>`;
+  if(tb>0){const left=tb-ms;h+=`<div class="tot" style="border:0;margin:6px 0 0"><span>我的總預算 ${yen(tb)}</span><span class="${left<0?"over":""}">${left<0?"超支 "+yen(-left):"剩餘 "+yen(left)}</span></div><div class="bar"><i style="width:${Math.min(100,ms/tb*100)}%;${left<0?"background:#ff5a6e":""}"></i></div><div class="note">只計你自己的每日花費（含朋友代墊給你的），不含住宿與機票。目前已花 ${yen(ms)}。</div>`}
   h+=`<div class="row"><span class="note" style="align-self:center;min-width:64px">匯率</span><input id="rate" type="number" step="0.001" value="${S.rate}" style="max-width:100px"><span class="note" style="align-self:center">1 日圓 ≈ 台幣</span></div></div>`;
   const mt={};S.exp.forEach(e=>mt[e.for||e.by]=(mt[e.for||e.by]||0)+e.amt);
   if(Object.keys(mt).length>1)h+=`<div class="card"><h2>👥 成員累計花費</h2>`+Object.entries(mt).sort((a,b)=>b[1]-a[1]).map(([id,v])=>`<div class="lb"><span class="grow">${esc(nm(id))}</span><span class="fm">${yen(v)}</span></div>`).join("")+`</div>`;
@@ -281,8 +287,8 @@ function overview(){
   `<div class="row"><input id="h_n" class="w" placeholder="飯店名稱"><input id="h_a" class="w" placeholder="地址"></div>
   <div class="row"><input id="h_ci" type="date" value="2026-11-11"><input id="h_cit" type="time" value="15:00"><input id="h_co" type="date" value="2026-11-19"><input id="h_cot" type="time" value="11:00"></div>
   <div class="row"><input id="h_p" type="number" inputmode="decimal" placeholder="住宿總費用（選填）">${curSel("h_c","TWD")}<button class="b" id="addH">新增</button></div></div>`;
-  h+=`<div class="card"><h2>📅 每日行程・預算・花費</h2>`+[...Array(9).keys()].map(i=>{const d=D(i),it=dayItems(i,1),s=stats(it),us=S.stops.some(x=>x.day==i);
-    return `<div class="stop"><div class="grow"><a href="#d${i+1}" data-go="${i}">Day ${i+1}　${d.getMonth()+1}/${d.getDate()}</a><div class="note">${us||it.length?`${s.n} 個行程${s.m>1?` · 約 ${s.km.toFixed(1)} km`:""}`:"尚未安排"}</div></div><div style="text-align:right"><div class="fm">${yen(dayTot(i))}</div><input class="bi" data-b="${i}" type="number" inputmode="decimal" placeholder="預算" value="${S.bud[i]||""}" style="width:92px;margin-top:4px"></div></div>`}).join("")+`</div>`;
+  h+=`<div class="card"><h2>📅 每日行程・我的預算與花費</h2>`+[...Array(9).keys()].map(i=>{const d=D(i),it=dayItems(i,1),s=stats(it),us=S.stops.some(x=>x.day==i);
+    return `<div class="stop"><div class="grow"><a href="#d${i+1}" data-go="${i}">Day ${i+1}　${d.getMonth()+1}/${d.getDate()}</a><div class="note">${us||it.length?`${s.n} 個行程${s.m>1?` · 約 ${s.km.toFixed(1)} km`:""}`:"尚未安排"}${dayTot(i)>mySpend(i)?` · 全員 ${yen(dayTot(i))}`:""}</div></div><div style="text-align:right"><div class="fm">${yen(mySpend(i))}</div><input class="bi" data-b="${i}" type="number" inputmode="decimal" placeholder="我的預算" value="${myBud(i)||""}" style="width:92px;margin-top:4px"></div></div>`}).join("")+`</div>`;
   const cs=byCat(S.exp);
   h+=`<div class="card"><h2>📊 每日花費分類統計</h2>`+(cs.length?cs.map(([c,v])=>`<div class="tot" style="border:0;margin:0;padding:0;font-weight:400"><span>${c}</span><span>${yen(v)}　${Math.round(v/dt*100)}%</span></div><div class="bar"><i style="width:${v/dt*100}%"></i></div>`).join(""):`<div class="empty">記帳後會在這裡顯示統計。</div>`)+`</div>`;
   return h;
@@ -320,14 +326,14 @@ function draw(){
    (ru?`<a class="b" href="${ru}" target="_blank" rel="noopener">在 Google 地圖開啟路線</a>`:"")+`</div>`;
   h+=hotelsToday(cur)+timeline(items);
   h+=weather(cur)+board(cur);
-  const bd=S.bud[cur]||0;let bud="";
-  if(bd>0){const left=bd-tot;bud=`<div class="tot" style="border:0;margin:0"><span>今日預算 ${yen(bd)}</span><span class="${left<0?"over":""}">${left<0?"超支 "+yen(-left):"剩餘 "+yen(left)}</span></div><div class="bar"><i style="width:${Math.min(100,tot/bd*100)}%;${left<0?"background:#ff5a6e":""}"></i></div>`}
+  const bd=myBud(cur),my=mySpend(cur);let bud="";
+  if(bd>0){const left=bd-my;bud=`<div class="tot" style="border:0;margin:0"><span>我的今日預算 ${yen(bd)}</span><span class="${left<0?"over":""}">${left<0?"超支 "+yen(-left):"剩餘 "+yen(left)}</span></div><div class="bar"><i style="width:${Math.min(100,my/bd*100)}%;${left<0?"background:#ff5a6e":""}"></i></div>`}
   const ex=dayExp(cur);
   h+=`<div class="card"><h2>💴 今日花費</h2>${bud}`+
    (ex.length?ex.map(e=>`<div class="stop"><div class="grow">${esc(e.label)}<span class="tag">${CATS.includes(e.cat)?e.cat:"其他"}</span>${e.for&&e.for!=e.by?`<span class="tag">代墊</span>`:""}${LIVE?`<div class="note" style="color:${mcol(e.by)}">● ${esc(nm(e.by))}${e.for&&e.for!=e.by?" 代 "+esc(nm(e.for))+" 墊付":""}</div>`:""}</div><div class="fm">${yen(e.amt)}</div>${e.by==ME?`<button class="x" style="position:static" data-de="${e.id}" aria-label="刪除">×</button>`:""}</div>`).join(""):`<div class="empty">還沒有記錄。</div>`)+
    `<div class="row"><select id="ex_c">${CATS.map(c=>`<option>${c}</option>`).join("")}</select><input id="ex_l" class="w" placeholder="項目（例：午餐拉麵）"></div>
    <div class="row">${oth.length?`<select id="ex_f"><option value="">自己的花費</option>${oth.map(id=>`<option value="${id}">代 ${esc(nm(id))} 墊付</option>`).join("")}</select>`:""}<input id="ex_a" type="number" inputmode="decimal" placeholder="日圓"><button class="b" id="addE">記帳</button></div>
-   <div class="tot"><span>今日合計（全員）</span><span>${yen(tot)}　≈ ${twd(tot)}</span></div>`+
+   <div class="tot"><span>今日合計（全員）</span><span>${yen(tot)}　≈ ${twd(tot)}</span></div><div class="tot" style="border:0;margin:0;padding-top:2px;font-weight:400"><span>我的消費</span><span>${yen(my)}</span></div>`+
    (ex.length?`<div class="note" style="margin-top:4px">${byCat(ex).map(([c,x])=>c+" "+yen(x)).join("　")}</div>`:"")+`</div>`;
   v.innerHTML=h+foot;addAnim=0;
 }
@@ -368,8 +374,8 @@ function enterApp(){SHOWN=1;startWeather();document.getElementById("login").clas
 function route(){if(SHOWN||!READY)return;needName()?showLogin():enterApp()}
 async function saveName(){
   const n=val("gn").trim().slice(0,12);if(!n)return;
-  MEM[ME]={name:n};READY=1;enterApp();render();
-  try{await setDoc(doc(fs,"members",ME),{name:n})}catch(e){wfail()}
+  MEM[ME]=Object.assign({},MEM[ME],{name:n});READY=1;enterApp();render();
+  try{await setDoc(doc(fs,"members",ME),{name:n},{merge:true})}catch(e){wfail()}
 }
 async function googleLogin(){
   const p=new GoogleAuthProvider();p.setCustomParameters({prompt:"select_account"});
@@ -419,9 +425,9 @@ document.addEventListener("click",e=>{
 document.addEventListener("change",e=>{
   const t=e.target;
   if(t.id=="rate"){S.rate=parseFloat(t.value)||0.21;save()}
-  else if(t.id=="tb"){const b=parseFloat(t.value);if(b>0)S.tb=b;else delete S.tb;save()}
+  else if(t.id=="tb"){const b=parseFloat(t.value);setMy({tb:b>0?b:null})}
   else if(t.id=="f_a"||t.id=="f_c"){S.flight={amt:parseFloat(val("f_a"))||0,cur:val("f_c")};save()}
-  else if(t.dataset.b!==undefined){const b=parseFloat(t.value);if(b>0)S.bud[t.dataset.b]=b;else delete S.bud[t.dataset.b];save()}
+  else if(t.dataset.b!==undefined){const b=parseFloat(t.value),bud=Object.assign({},(MEM[ME]&&MEM[ME].bud)||{});if(b>0)bud[t.dataset.b]=b;else delete bud[t.dataset.b];setMy({bud})}
   else if(t.dataset.cs!==undefined)updDoc("stops",t.dataset.cs,{cat:t.value});
   else if(t.dataset.ct!==undefined){updDoc("stops",t.dataset.ct,{t:t.value});TU=Date.now()+1500;render();return}
   else return;
@@ -473,7 +479,7 @@ if(!CONFIGURED){
       try{
         const c=JSON.parse(s.data().json),oc=S.closed||{},nc=c.closed||{};
         if(cfgLoaded)Object.keys(nc).forEach(k=>{if(!oc[k]&&nc[k].rank&&nc[k].rank[0])toast(`🏆 Day ${+k+1} 已提前結算：${nm(nc[k].rank[0][0])} 花費最高 ${yen(nc[k].rank[0][1])}`)});
-        cfgLoaded=1;Object.assign(S,{rate:c.rate||0.21,tb:c.tb,flight:c.flight,hotels:c.hotels||[],bud:c.bud||{},closed:nc});render();
+        cfgLoaded=1;Object.assign(S,{rate:c.rate||0.21,flight:c.flight,hotels:c.hotels||[],closed:nc});render();
       }catch(e){}
     },denied));
   });
